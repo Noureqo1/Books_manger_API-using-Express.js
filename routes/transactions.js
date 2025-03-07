@@ -1,16 +1,13 @@
 const express = require('express');
 const router = express.Router();
 
-// In-memory data store
 let transactions = [];
 let books = require('./books').books;
 
-// GET all transactions
 router.get('/', (req, res) => {
     res.json(transactions);
 });
 
-// POST new borrowing transaction
 router.post('/borrow', (req, res) => {
     const { userId, bookId } = req.body;
     if (!userId || !bookId) {
@@ -39,7 +36,6 @@ router.post('/borrow', (req, res) => {
     res.status(201).json(transaction);
 });
 
-// POST return transaction
 router.post('/return', (req, res) => {
     const { userId, bookId } = req.body;
     if (!userId || !bookId) {
