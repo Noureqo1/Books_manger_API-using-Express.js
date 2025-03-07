@@ -20,25 +20,20 @@ The server will run on http://localhost:3000
 
 ### GET /api/books
 - Returns all books
-- Response: Array of book objects
 
 ### GET /api/books/:id
 - Returns a single book by ID
-- Response: Book object or 404 error
 
 ### POST /api/books
 - Creates a new book
 - Request body: { "title": "string", "author": "string", "year": number }
-- Response: Created book object
 
 ### PUT /api/books/:id
 - Updates an existing book
 - Request body: { "title": "string", "author": "string", "year": number }
-- Response: Updated book object or 404 error
 
 ### DELETE /api/books/:id
 - Deletes a book
-- Response: 204 No Content or 404 error
 
 ## Example Book Object
 ```json
