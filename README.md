@@ -1,6 +1,12 @@
 # Books & Plogs API
 
-A simple RESTful API for managing books and plogs using Express.js.
+A simple RESTful API for managing books and plogs using Express.js with PostgreSQL and MongoDB.
+
+## Database Architecture
+
+This API uses a hybrid database approach:
+- **PostgreSQL**: Stores structured data (authors)
+- **MongoDB**: Stores unstructured data (plogs)
 
 ## Setup and Installation
 
@@ -9,7 +15,8 @@ A simple RESTful API for managing books and plogs using Express.js.
 npm install
 ```
 
-2. Start the server:
+### Starting the Server
+
 ```bash
 npm start
 ```
@@ -37,7 +44,22 @@ The server will run on http://localhost:3000
 #### DELETE /api/books/:id
 - Deletes a book
 
-### Plogs
+### Authors (PostgreSQL)
+
+#### GET /api/authors
+- Returns all authors
+
+#### GET /api/authors/:id
+- Returns a single author by ID
+
+#### POST /api/authors
+- Creates a new author
+- Request body: { "name": "string", "email": "string", "bio": "string" }
+
+#### DELETE /api/authors/:id
+- Deletes an author
+
+### Plogs (MongoDB)
 
 #### GET /api/plogs
 - Returns all plogs
@@ -47,16 +69,17 @@ The server will run on http://localhost:3000
 
 #### POST /api/plogs
 - Creates a new plog
-- Request body: { "title": "string", "content": "string", "author": "string" }
-
-#### PUT /api/plogs/:id
-- Updates an existing plog
-- Request body: { "title": "string", "content": "string", "author": "string" }
+- Request body: { "title": "string", "content": "string", "authorId": number }
 
 #### DELETE /api/plogs/:id
 - Deletes a plog
 
+## Authentication
 
+All API endpoints require authentication using a Bearer token:
+```
+Authorization: Bearer ZEWAIL
+```
 
 ## Example Objects
 
@@ -69,3 +92,25 @@ The server will run on http://localhost:3000
     "year": 1925
 }
 ```
+
+### Author (PostgreSQL)
+```json
+{
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "bio": "Tech writer and software developer",
+    "created_at": "2025-03-14T14:05:58.000Z"
+}
+```
+
+### Plog (MongoDB)
+```json
+{
+    "_id": "60f7b0b9e6c7a234b8765432",
+    "title": "Introduction to Express.js",
+    "content": "Express.js is a minimal and flexible Node.js web application framework...",
+    "authorId": 1,
+    "createdAt": "2025-03-14T14:05:58.000Z",
+    "updatedAt": "2025-03-14T14:05:58.000Z"
+}

@@ -1,11 +1,15 @@
 const express = require('express');
 const app = express();
 const authMiddleware = require('./middleware/auth');
+const { pgPool, connectMongo } = require('./config/db');
 
 const booksRouter = require('./routes/books');
 const authorsRouter = require('./routes/authors');
 const transactionsRouter = require('./routes/transactions');
 const plogsRouter = require('./routes/blogs');
+
+// Connect to MongoDB
+connectMongo();
 
 app.use(express.json());
 app.use(authMiddleware);
@@ -20,7 +24,16 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 3000;
+// Test PostgreSQL connection
+pgPool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+        console.error('PostgreSQL connection error:', err);
+    } else {
+        console.log('PostgreSQL connected successfully');
+    }
+});
+
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

@@ -1,51 +1,73 @@
 const express = require('express');
 const router = express.Router();
+const { pgPool } = require('../config/db');
 
-let authors = [
-    { id: 1, name: 'F. Scott Fitzgerald' },
-    { id: 2, name: 'George Orwell' },
-];
-
-router.get('/', (req, res) => {
-    res.json(authors);
-});
-
-router.get('/:id', (req, res) => {
-    const author = authors.find(a => a.id === parseInt(req.params.id));
-    if (!author) return res.status(404).json({ message: 'Author not found' });
-    res.json(author);
-});
-
-router.post('/', (req, res) => {
-    const { name } = req.body;
-    if (!name) {
-        return res.status(400).json({ message: 'Name is required' });
+router.get('/', async (req, res) => {
+    try {
+        const result = await pgPool.query('SELECT * FROM authors ORDER BY id');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
     }
-
-    const newAuthor = {
-        id: authors.length + 1,
-        name
-    };
-    authors.push(newAuthor);
-    res.status(201).json(newAuthor);
 });
 
-router.put('/:id', (req, res) => {
-    const author = authors.find(a => a.id === parseInt(req.params.id));
-    if (!author) return res.status(404).json({ message: 'Author not found' });
-
-    const { name } = req.body;
-    if (name) author.name = name;
-
-    res.json(author);
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pgPool.query('SELECT * FROM authors WHERE id = $1', [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Author not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
-router.delete('/:id', (req, res) => {
-    const authorIndex = authors.findIndex(a => a.id === parseInt(req.params.id));
-    if (authorIndex === -1) return res.status(404).json({ message: 'Author not found' });
+router.post('/', async (req, res) => {
+    try {
+        const { name, email, bio } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ message: 'Name is required' });
+        }
+        
+        const result = await pgPool.query(
+            'INSERT INTO authors (name, email, bio) VALUES ($1, $2, $3) RETURNING *',
+            [name, email || null, bio || null]
+        );
+        
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        
+        if (err.code === '23505') {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+        
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
-    authors.splice(authorIndex, 1);
-    res.status(204).send();
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const checkResult = await pgPool.query('SELECT * FROM authors WHERE id = $1', [id]);
+        if (checkResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Author not found' });
+        }
+        
+        await pgPool.query('DELETE FROM authors WHERE id = $1', [id]);
+        res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
 module.exports = router;

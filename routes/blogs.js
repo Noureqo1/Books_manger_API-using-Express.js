@@ -1,79 +1,77 @@
 const express = require('express');
 const router = express.Router();
+const Plog = require('../models/blog');
+const { pgPool } = require('../config/db');
 
-
-let plogs = [
-    { 
-        id: 1, 
-        title: 'Introduction to Express.js', 
-        content: 'Express.js is a minimal and flexible Node.js web application framework...', 
-        author: 'John Doe',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    { 
-        id: 2, 
-        title: 'RESTful API Design', 
-        content: 'REST (Representational State Transfer) is an architectural style...', 
-        author: 'Jane Smith',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+router.get('/', async (req, res) => {
+    try {
+        const plogs = await Plog.find().sort({ createdAt: -1 });
+        res.json(plogs);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
     }
-];
-
-router.get('/', (req, res) => {
-    res.json(plogs);
 });
 
-router.get('/:id', (req, res) => {
-    const plog = plogs.find(p => p.id === parseInt(req.params.id));
-    if (!plog) return res.status(404).json({ message: 'Plog not found' });
-    res.json(plog);
-});
-
-// CREATE plog
-
-router.post('/', (req, res) => {
-    const { title, content, author } = req.body;
-    
-    if (!title || !content) {
-        return res.status(400).json({ message: 'Title and content are required' });
+router.get('/:id', async (req, res) => {
+    try {
+        const plog = await Plog.findById(req.params.id);
+        if (!plog) return res.status(404).json({ message: 'Plog not found' });
+        res.json(plog);
+    } catch (err) {
+        console.error(err);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ message: 'Plog not found' });
+        }
+        res.status(500).json({ message: 'Server error' });
     }
-
-    const newPlog = {
-        id: plogs.length + 1,
-        title,
-        content,
-        author: author || 'Anonymous',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    };
-    
-    plogs.push(newPlog);
-    res.status(201).json(newPlog);
 });
 
-router.put('/:id', (req, res) => {
-    const plog = plogs.find(p => p.id === parseInt(req.params.id));
-    if (!plog) return res.status(404).json({ message: 'Plog not found' });
+router.post('/', async (req, res) => {
+    try {
+        const { title, content, authorId } = req.body;
+        
+        if (!title || !content) {
+            return res.status(400).json({ message: 'Title and content are required' });
+        }
 
-    const { title, content, author } = req.body;
-    
-    if (title) plog.title = title;
-    if (content) plog.content = content;
-    if (author) plog.author = author;
-    
-    plog.updatedAt = new Date().toISOString();
+        if (authorId) {
+            const authorResult = await pgPool.query('SELECT id FROM authors WHERE id = $1', [authorId]);
+            if (authorResult.rows.length === 0) {
+                return res.status(400).json({ message: 'Author not found' });
+            }
+        }
 
-    res.json(plog);
+        const newPlog = new Plog({
+            title,
+            content,
+            authorId: authorId || 1, // Default to first author
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+        
+        const savedPlog = await newPlog.save();
+        res.status(201).json(savedPlog);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
-router.delete('/:id', (req, res) => {
-    const plogIndex = plogs.findIndex(p => p.id === parseInt(req.params.id));
-    if (plogIndex === -1) return res.status(404).json({ message: 'Plog not found' });
-
-    plogs.splice(plogIndex, 1);
-    res.status(204).send();
+router.delete('/:id', async (req, res) => {
+    try {
+        const plog = await Plog.findByIdAndDelete(req.params.id);
+        
+        if (!plog) return res.status(404).json({ message: 'Plog not found' });
+        
+        res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ message: 'Plog not found' });
+        }
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
 module.exports = router;
