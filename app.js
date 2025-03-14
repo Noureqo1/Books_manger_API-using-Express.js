@@ -5,6 +5,7 @@ const authMiddleware = require('./middleware/auth');
 const booksRouter = require('./routes/books');
 const authorsRouter = require('./routes/authors');
 const transactionsRouter = require('./routes/transactions');
+const plogsRouter = require('./routes/blogs');
 
 app.use(express.json());
 app.use(authMiddleware);
@@ -12,6 +13,7 @@ app.use(authMiddleware);
 app.use('/api/books', booksRouter);
 app.use('/api/authors', authorsRouter);
 app.use('/api/transactions', transactionsRouter);
+app.use('/api/plogs', plogsRouter);
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
