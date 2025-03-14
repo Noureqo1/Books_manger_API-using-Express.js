@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { mockPlogModel, MockPlog } = require('../config/db');
 
 const plogSchema = new mongoose.Schema({
   title: {
@@ -25,4 +24,4 @@ const plogSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('blog', blogSchema);
+module.exports = mongoose.model('Plog', plogSchema);

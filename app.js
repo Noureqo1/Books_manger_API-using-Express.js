@@ -9,7 +9,15 @@ const transactionsRouter = require('./routes/transactions');
 const plogsRouter = require('./routes/blogs');
 
 // Connect to MongoDB
-connectMongo();
+try {
+    connectMongo().catch(err => {
+        console.error('MongoDB connection error:', err);
+        console.log('API will use in-memory data for plogs');
+    });
+} catch (err) {
+    console.error('MongoDB setup error:', err);
+    console.log('API will use in-memory data for plogs');
+}
 
 app.use(express.json());
 app.use(authMiddleware);
@@ -31,7 +39,7 @@ pgPool.query('SELECT NOW()', (err, res) => {
     } else {
         console.log('PostgreSQL connected successfully');
     }
-});
+    });
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Plog = require('../models/blog');
+const Plog = require('../models/plog');
 const { pgPool } = require('../config/db');
 
 router.get('/', async (req, res) => {
